@@ -1,0 +1,4 @@
+---
+:xmpp_jid: 'user@jabber.server'
+:xmpp_password: 'password'
+:xmpp_target: 'target@jabber.server'
