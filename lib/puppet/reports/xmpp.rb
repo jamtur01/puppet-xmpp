@@ -16,13 +16,14 @@ Puppet::Reports.register_report(:xmpp) do
   XMPP_JID = config[:xmpp_jid]
   XMPP_PASSWORD = config[:xmpp_password]
   XMPP_TARGET = config[:xmpp_target]
+  XMPP_ENV = config[:xmpp_environment]
 
   desc <<-DESC
   Send notification of failed reports to an XMPP user.
   DESC
 
   def process
-    if self.status == 'failed'
+    if self.status == 'failed' and (XMPP_ENV.include?(self.environment) or XMPP_ENV == 'ALL')
       Puppet.debug "Sending status for #{self.host} to XMMP user #{XMPP_TARGET}"
       jid = JID::new(XMPP_JID)
       cl = Client::new(jid)

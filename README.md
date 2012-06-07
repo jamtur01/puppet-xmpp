@@ -23,10 +23,15 @@ Installation & Usage
 2.  Install puppet-xmpp as a module in your Puppet master's module
     path.
 
-3.  Update the `xmpp_jid`, `xmpp_passowrd`, and `xmpp_target` variables in `xmpp.yaml` 
+3.  Update the `xmpp_jid`, `xmpp_passowrd`, and `xmpp_target` variables in `xmpp.yaml`
     and copy the file to `/etc/puppet`. An example file is included.
 
-4.  Enable pluginsync and reports on your master and clients in `puppet.conf`
+4.  Optionally change `xmpp_environment` in `xmpp.yaml`.  You can set this value to a
+    string or an array of strings.  These strings are the names of acceptable environments
+    to send alerts for.  If you don't change this option from the default of ALL the
+    processor will send an alert for errors in all environments.
+
+5.  Enable pluginsync and reports on your master and clients in `puppet.conf`
 
         [master]
         report = true
@@ -36,7 +41,7 @@ Installation & Usage
         report = true
         pluginsync = true
 
-5.  Run the Puppet client and sync the report as a plugin
+6.  Run the Puppet client and sync the report as a plugin
 
 Author
 ------
