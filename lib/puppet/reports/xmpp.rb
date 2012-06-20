@@ -13,10 +13,11 @@ Puppet::Reports.register_report(:xmpp) do
   configfile = File.join([File.dirname(Puppet.settings[:config]), "xmpp.yaml"])
   raise(Puppet::ParseError, "XMPP report config file #{configfile} not readable") unless File.exist?(configfile)
   config = YAML.load_file(configfile)
+  XMPP_SRV = config[:xmpp_server] || nil
   XMPP_JID = config[:xmpp_jid]
   XMPP_PASSWORD = config[:xmpp_password]
   XMPP_TARGET = config[:xmpp_target]
-  XMPP_ENV = config[:xmpp_environment]
+  XMPP_ENV = config[:xmpp_environment] || 'ALL'
 
   desc <<-DESC
   Send notification of failed reports to an XMPP user or MUC.
@@ -26,7 +27,8 @@ Puppet::Reports.register_report(:xmpp) do
     if self.status == 'failed' and (XMPP_ENV.include?(self.environment) or XMPP_ENV == 'ALL')
       jid = JID::new(XMPP_JID)
       cl = Client::new(jid)
-      cl.connect
+
+      XMPP_SRV != nil ? cl.connect(XMPP_SRV) : cl.connect
       cl.auth(XMPP_PASSWORD)
 
       body = "Puppet run for #{self.host} #{self.status} at #{Time.now.asctime}"
