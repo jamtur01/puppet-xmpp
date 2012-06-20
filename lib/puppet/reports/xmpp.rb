@@ -24,7 +24,6 @@ Puppet::Reports.register_report(:xmpp) do
 
   def process
     if self.status == 'failed' and (XMPP_ENV.include?(self.environment) or XMPP_ENV == 'ALL')
-      Puppet.debug "Sending status for #{self.host} to XMMP user #{XMPP_TARGET}"
       jid = JID::new(XMPP_JID)
       cl = Client::new(jid)
       cl.connect
@@ -34,13 +33,18 @@ Puppet::Reports.register_report(:xmpp) do
       m = Message::new(XMPP_TARGET, body)
 
       if XMPP_TARGET =~ /conference/ then
+        Puppet.info "Sending status for #{self.host} to XMPP MUC #{XMPP_TARGET}"
         require 'xmpp4r/muc'
         muc = MUC::MUCClient.new(cl)
-        muc.join(JID::new(XMPP_TARGET + cl.jid.node))
-        muc.send(m)
+        muc.join JID::new(XMPP_TARGET + '/' + cl.jid.node)
+        muc.send m
+        muc.exit
       else
+        Puppet.info "Sending status for #{self.host} to XMMP user #{XMPP_TARGET}"
         cl.send m.set_type(:normal).set_id('1').set_subject("Puppet run failed!")
       end
+
+      cl.close
     end
   end
 end
