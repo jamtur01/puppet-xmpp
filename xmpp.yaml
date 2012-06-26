@@ -1,3 +1,20 @@
+# Options
+#   xmpp_jid
+#   xmpp_password
+#
+#   xmpp_target       The JID to notify
+#
+#   xmpp_environment  You can set this value to a
+#                     string or an array of strings.
+#                     defaults to: ALL
+#
+#   xmpp_server       Specify a hostname to use as
+#                     XMPP server.
+#                     defaults to: nil. will use
+#                     SRV records
+#
+#   xmpp_muc          Wether your target is a MUC.
+#                     defaults to: false
 ---
 :xmpp_jid: 'user@jabber.server'
 :xmpp_password: 'password'
