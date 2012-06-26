@@ -18,6 +18,7 @@ Puppet::Reports.register_report(:xmpp) do
   XMPP_PASSWORD = config[:xmpp_password]
   XMPP_TARGET = config[:xmpp_target]
   XMPP_ENV = config[:xmpp_environment] || 'ALL'
+  XMPP_MUC = config[:xmpp_muc] || false
 
   desc <<-DESC
   Send notification of failed reports to an XMPP user or MUC.
@@ -34,7 +35,7 @@ Puppet::Reports.register_report(:xmpp) do
       body = "Puppet run for #{self.host} #{self.status} at #{Time.now.asctime}"
       m = Message::new(XMPP_TARGET, body)
 
-      if XMPP_TARGET =~ /conference/ then
+      if XMPP_MUC then
         Puppet.info "Sending status for #{self.host} to XMPP MUC #{XMPP_TARGET}"
         require 'xmpp4r/muc'
         muc = MUC::MUCClient.new(cl)
