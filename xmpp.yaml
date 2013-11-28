@@ -2,7 +2,8 @@
 #   xmpp_jid
 #   xmpp_password
 #
-#   xmpp_target       The JID to notify
+#   xmpp_target       The JID to notify.
+#                     If u want leave it away and use regex-profiles
 #
 #   xmpp_environment  You can set this value to a
 #                     string or an array of strings.
@@ -15,7 +16,24 @@
 #
 #   xmpp_muc          Wether your target is a MUC.
 #                     defaults to: false
+#
+#   regex             Different regex-profiles for more selective config
+#                     Every profiles starts with an ID: example1
+#                     Then every profile needs a ":test"-key/value with an
+#                     regex to match the host against.
+#                     Then every profile can override xmpp_target and xmpp_muc
+#                     as needed.
+#
 ---
 :xmpp_jid: 'user@jabber.server'
 :xmpp_password: 'password'
 :xmpp_target: 'target@jabber.server'
+:regex:
+  :example1:
+    :test: 'some.*.domain.com'
+    :xmpp_target: 'some-room@conference.server'
+    :xmpp_muc: true
+  :example2:
+    :test: 'other.*.domain.com'
+    :xmpp_target: 'other-person@server'
+    :xmpp_muc: false

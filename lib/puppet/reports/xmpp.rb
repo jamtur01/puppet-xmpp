@@ -1,12 +1,8 @@
 require 'puppet'
 require 'yaml'
+require 'xmpp4r/client'
 
-begin
-  require 'xmpp4r/client'
-  include Jabber
-rescue LoadError => e
-  Puppet.info "You need the `xmpp4r` gem to use the XMPP report"
-end
+include Jabber
 
 Puppet::Reports.register_report(:xmpp) do
 
@@ -16,38 +12,60 @@ Puppet::Reports.register_report(:xmpp) do
   XMPP_SRV = config[:xmpp_server] || nil
   XMPP_JID = config[:xmpp_jid]
   XMPP_PASSWORD = config[:xmpp_password]
-  XMPP_TARGET = config[:xmpp_target]
+  XMPP_TARGET = config[:xmpp_target] || nil
   XMPP_ENV = config[:xmpp_environment] || 'ALL'
   XMPP_MUC = config[:xmpp_muc] || false
+  REGEX = config[:regex] || nil
 
   desc <<-DESC
   Send notification of failed reports to an XMPP user or MUC.
   DESC
 
   def process
-    if self.status == 'failed' and (XMPP_ENV.include?(self.environment) or XMPP_ENV == 'ALL')
-      jid = JID::new(XMPP_JID)
-      cl = Client::new(jid)
+    xmpp_target = XMPP_TARGET
+    xmpp_muc = XMPP_MUC
 
-      XMPP_SRV != nil ? cl.connect(XMPP_SRV) : cl.connect
-      cl.auth(XMPP_PASSWORD)
+    self.status != nil ? status = self.status : status = 'undefined'
+    self.environment != nil ? environment = self.environment : environment = 'undefined'
 
-      body = "Puppet run for #{self.host} #{self.status} at #{Time.now.asctime}"
-      m = Message::new(XMPP_TARGET, body)
+    if status == 'failed' or status == 'undefined' then
 
-      if XMPP_MUC then
-        Puppet.info "Sending status for #{self.host} to XMPP MUC #{XMPP_TARGET}"
-        require 'xmpp4r/muc'
-        muc = MUC::MUCClient.new(cl)
-        muc.join JID::new(XMPP_TARGET + '/' + cl.jid.node)
-        muc.send m
-        muc.exit
-      else
-        Puppet.info "Sending status for #{self.host} to XMMP user #{XMPP_TARGET}"
-        cl.send m.set_type(:normal).set_id('1').set_subject("Puppet run failed!")
+      if REGEX != nil then
+        REGEX.each_key { |key| Puppet.info "Test regex #{key}"
+          teststr = REGEX[key][:test]
+          if self.host =~ /#{teststr}/ then
+            Puppet.info "Host is matching regex '#{teststr}'."
+            if REGEX[key][:xmpp_target] != nil then xmpp_target = REGEX[key][:xmpp_target] end
+            if REGEX[key][:xmpp_muc] != nil then xmpp_muc = REGEX[key][:xmpp_muc] end
+            break
+          end
+        }
       end
 
-      cl.close
+      if xmpp_target != nil and (XMPP_ENV.include?(environment) or XMPP_ENV == 'ALL') then
+        jid = JID::new(XMPP_JID)
+        cl = Client::new(jid)
+
+        XMPP_SRV != nil ? cl.connect(XMPP_SRV) : cl.connect
+        cl.auth(XMPP_PASSWORD)
+
+        body = "Puppet run for #{self.host} #{status} at #{Time.now.asctime}"
+        m = Message::new(xmpp_target, body)
+
+        if xmpp_muc or xmpp_muc == 'true' then
+          Puppet.info "Sending status for #{self.host} to XMPP MUC #{xmpp_target}"
+          require 'xmpp4r/muc'
+          muc = MUC::MUCClient.new(cl)
+          muc.join JID::new(xmpp_target + '/' + cl.jid.node)
+          muc.send m
+          muc.exit
+        else
+          Puppet.info "Sending status for #{self.host} to XMMP user #{xmpp_target}"
+          cl.send m.set_type(:normal).set_id('1').set_subject("Puppet run failed!")
+        end
+
+        cl.close
+      end
     end
   end
 end
