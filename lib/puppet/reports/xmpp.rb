@@ -8,13 +8,18 @@ Puppet::Reports.register_report(:xmpp) do
 
   configfile = File.join([File.dirname(Puppet.settings[:config]), "xmpp.yaml"])
   raise(Puppet::ParseError, "XMPP report config file #{configfile} not readable") unless File.exist?(configfile)
-  config = YAML.load_file(configfile)
+  begin
+    config = YAML.load_file(configfile)
+  rescue TypeError => e
+    raise Puppet::ParserError, "XMPP Yaml file is invalid!"
+  end
   XMPP_SRV = config[:xmpp_server] || nil
   XMPP_JID = config[:xmpp_jid]
   XMPP_PASSWORD = config[:xmpp_password]
   XMPP_TARGET = config[:xmpp_target] || nil
   XMPP_ENV = config[:xmpp_environment] || 'ALL'
   XMPP_MUC = config[:xmpp_muc] || false
+  XMPP_MUC_PASSWORD = config[:xmpp_muc_password] || nil
   REGEX = config[:regex] || nil
 
   desc <<-DESC
@@ -56,7 +61,7 @@ Puppet::Reports.register_report(:xmpp) do
           Puppet.info "Sending status for #{self.host} to XMPP MUC #{xmpp_target}"
           require 'xmpp4r/muc'
           muc = MUC::MUCClient.new(cl)
-          muc.join JID::new(xmpp_target + '/' + cl.jid.node)
+          muc.join(JID::new(xmpp_target + '/' + cl.jid.node), XMPP_MUC_PASSWORD)
           muc.send m
           muc.exit
         else
