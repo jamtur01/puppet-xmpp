@@ -17,6 +17,9 @@
 #   xmpp_muc          Wether your target is a MUC.
 #                     defaults to: false
 #
+#   xmpp_muc_password Specify a password for your MUC
+#                     defaults to: nil
+#
 #   regex             Different regex-profiles for more selective config
 #                     Every profiles starts with an ID: example1
 #                     Then every profile needs a ":test"-key/value with an
