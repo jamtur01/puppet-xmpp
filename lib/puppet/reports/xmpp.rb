@@ -29,6 +29,7 @@ Puppet::Reports.register_report(:xmpp) do
   def process
     xmpp_target = XMPP_TARGET
     xmpp_muc = XMPP_MUC
+    xmpp_muc_password = XMPP_MUC_PASSWORD
 
     self.status != nil ? status = self.status : status = 'undefined'
     self.environment != nil ? environment = self.environment : environment = 'undefined'
@@ -42,6 +43,7 @@ Puppet::Reports.register_report(:xmpp) do
             Puppet.info "Host is matching regex '#{teststr}'."
             if REGEX[key][:xmpp_target] != nil then xmpp_target = REGEX[key][:xmpp_target] end
             if REGEX[key][:xmpp_muc] != nil then xmpp_muc = REGEX[key][:xmpp_muc] end
+            if REGEX[key][:xmpp_muc_password] != nil then xmpp_muc_password = REGEX[key][:xmpp_muc_password] end
             break
           end
         }
@@ -61,7 +63,7 @@ Puppet::Reports.register_report(:xmpp) do
           Puppet.info "Sending status for #{self.host} to XMPP MUC #{xmpp_target}"
           require 'xmpp4r/muc'
           muc = MUC::MUCClient.new(cl)
-          muc.join(JID::new(xmpp_target + '/' + cl.jid.node), XMPP_MUC_PASSWORD)
+          muc.join(JID::new(xmpp_target + '/' + cl.jid.node), xmpp_muc_password)
           muc.send m
           muc.exit
         else
